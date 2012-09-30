@@ -3,15 +3,16 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>1.466</version><!-- which version of Jenkins is this plugin built against? -->
+    <version>1.399</version><!-- which version of Jenkins is this plugin built against? -->
   </parent>
 
-  <groupId>com.pivotallabs.plugins</groupId>
-  <artifactId>Lobot</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <groupId>com.pivotallabs.jenkins.lobotplugin</groupId>
+  <artifactId>jenkins-lobot-plugin</artifactId>
+  <version>1.0</version>
   <packaging>hpi</packaging>
+  <name>Jenkins Lobot Plugin</name>
 
-  <!-- get every artifact through repo.jenkins-ci.org, which proxies all the artifacts that we need -->
+  <!-- get every artifact through maven.glassfish.org, which proxies all the artifacts that we need -->
   <repositories>
     <repository>
       <id>repo.jenkins-ci.org</id>
@@ -25,4 +26,20 @@
       <url>http://repo.jenkins-ci.org/public/</url>
     </pluginRepository>
   </pluginRepositories>
+
+  <scm>
+    <connection>scm:git:ssh://github.com/ohrite/jenkins-lobot-plugin.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/ohrite/jenkins-lobot-plugin.git</developerConnection>
+    <url>https://github.com/ohrite/jenkins-lobot-plugin</url>
+  </scm>
+
+  <url>http://github.com/ohrite/jenkins-lobot-plugin</url>
+
+  <developers>
+    <developer>
+      <id>ohrite</id>
+      <name>Doc Ritezel</name>
+      <email>ritezel@gmail.com</email>
+    </developer>
+  </developers>
 </project>
