@@ -1,6 +1,6 @@
 require 'net/ssh'
 require 'shellwords'
-module Lobot
+module Ciborg
   class Sobo
     class CommandFailed < StandardError; end;
 

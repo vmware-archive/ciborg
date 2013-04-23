@@ -1,16 +1,16 @@
 require "spec_helper"
 
-describe Lobot::CLI do
+describe Ciborg::CLI do
   let(:cli) { subject }
-  let(:sobo) { Lobot::Sobo.new(lobot_config.master, lobot_config.server_ssh_key_path) }
+  let(:sobo) { Ciborg::Sobo.new(ciborg_config.master, ciborg_config.server_ssh_key_path) }
 
   before do
-    cli.stub(:lobot_config).and_return(lobot_config) # lobot_config must be defined in each context below
+    cli.stub(:ciborg_config).and_return(ciborg_config) # ciborg_config must be defined in each context below
   end
 
   context 'with Amazon' do
-    let(:lobot_config) {
-      Lobot::Config.new(
+    let(:ciborg_config) {
+      Ciborg::Config.new(
         :aws_key => ENV["EC2_KEY"],
         :aws_secret => ENV["EC2_SECRET"],
         :server_ssh_key => ssh_key_pair_path)
@@ -19,24 +19,24 @@ describe Lobot::CLI do
     describe '#create & #destroy_ec2', :slow, :ec2 do
       it "launches an instance and associates elastic ip" do
         pending "Missing EC2 Credentials" unless SpecHelpers::ec2_credentials_present?
-        cli.lobot_config.instance_size = 't1.micro'
-        expect { cli.create }.to change { lobot_config.master }.from(nil)
+        cli.ciborg_config.instance_size = 't1.micro'
+        expect { cli.create }.to change { ciborg_config.master }.from(nil)
 
         cli.stub(:options).and_return({'force' => 'force'})
-        expect { cli.destroy_ec2 }.to change { lobot_config.master }.to(nil)
+        expect { cli.destroy_ec2 }.to change { ciborg_config.master }.to(nil)
       end
     end
 
     describe "#ssh" do
-      it "starts an ssh session to the lobot host" do
-        cli.should_receive(:exec).with("ssh -i #{cli.lobot_config.server_ssh_key_path} ubuntu@#{cli.lobot_config.master} -p #{cli.lobot_config.ssh_port}")
+      it "starts an ssh session to the ciborg host" do
+        cli.should_receive(:exec).with("ssh -i #{cli.ciborg_config.server_ssh_key_path} ubuntu@#{cli.ciborg_config.master} -p #{cli.ciborg_config.ssh_port}")
         cli.ssh
       end
     end
 
     describe "#open", :osx do
-      let(:lobot_config) do
-        Lobot::Config.new(:node_attributes => {
+      let(:ciborg_config) do
+        Ciborg::Config.new(:node_attributes => {
             :nginx => {
                 :basic_auth_user => "ci",
                 :basic_auth_password => "secret"
@@ -44,22 +44,22 @@ describe Lobot::CLI do
         })
       end
 
-      it "opens a web browser with the lobot page" do
-        lobot_config.master = "127.0.0.1"
+      it "opens a web browser with the ciborg page" do
+        ciborg_config.master = "127.0.0.1"
         cli.should_receive(:exec).with("open https://ci:secret@127.0.0.1/")
         cli.open
       end
     end
 
     describe "#trust_certificate", :osx do
-      let(:keychain) { Lobot::Keychain.new("/Library/Keychains/System.keychain") }
-      before { lobot_config.master = "192.168.99.99" }
+      let(:keychain) { Ciborg::Keychain.new("/Library/Keychains/System.keychain") }
+      before { ciborg_config.master = "192.168.99.99" }
 
       it "adds the key to the keychain" do
         fake_keychain = double(:keychain)
-        fake_keychain.should_receive(:fetch_remote_certificate).with("https://#{lobot_config.master}/").and_return("IAMACERTIFICATE")
+        fake_keychain.should_receive(:fetch_remote_certificate).with("https://#{ciborg_config.master}/").and_return("IAMACERTIFICATE")
         fake_keychain.should_receive(:add_certificate).with("IAMACERTIFICATE")
-        Lobot::Keychain.should_receive(:new).with("/Library/Keychains/System.keychain").and_return(fake_keychain)
+        Ciborg::Keychain.should_receive(:new).with("/Library/Keychains/System.keychain").and_return(fake_keychain)
 
         cli.trust_certificate
       end
@@ -72,7 +72,7 @@ describe Lobot::CLI do
       let(:command) { "script/ci_build.sh" }
 
       context "when the config is invalid" do
-        before { lobot_config.node_attributes.jenkins = {} }
+        before { ciborg_config.node_attributes.jenkins = {} }
 
         it "raises an error" do
           expect do
@@ -84,16 +84,16 @@ describe Lobot::CLI do
       context "when the configuration is valid" do
         context "with persisted configuration data" do
           let(:tempfile) do
-            Tempfile.new('lobot-config').tap do |file|
+            Tempfile.new('ciborg-config').tap do |file|
               file.write YAML.dump({})
               file.close
             end
           end
 
-          let(:lobot_config) { Lobot::Config.from_file(tempfile.path) }
+          let(:ciborg_config) { Ciborg::Config.from_file(tempfile.path) }
 
           def builds
-            cli.lobot_config.reload.node_attributes.jenkins.builds
+            cli.ciborg_config.reload.node_attributes.jenkins.builds
           end
 
           it "persists a build" do
@@ -122,12 +122,12 @@ describe Lobot::CLI do
         end
 
         it "uses the configured key pair" do
-          amazon.should_receive(:with_key_pair).with(cli.lobot_config.server_ssh_pubkey)
+          amazon.should_receive(:with_key_pair).with(cli.ciborg_config.server_ssh_pubkey)
           cli.create
         end
 
         context "with a custom security group", :slow => false do
-          before { cli.lobot_config.security_group = 'custom_group' }
+          before { cli.ciborg_config.security_group = 'custom_group' }
 
           it "launches the instance with the configured security group" do
             amazon.should_receive(:create_security_group).with('custom_group')
@@ -138,7 +138,7 @@ describe Lobot::CLI do
         end
 
         context "with a custom instance size", :slow => false do
-          before { cli.lobot_config.instance_size = 'really_big_instance' }
+          before { cli.ciborg_config.instance_size = 'really_big_instance' }
 
           it "launches the instance with the configured instance size" do
             amazon.should_receive(:launch_server).with(anything, anything, 'really_big_instance')
@@ -149,8 +149,8 @@ describe Lobot::CLI do
 
       describe "destroy_ec2" do
         before do
-          cli.lobot_config.master = ip_address
-          cli.lobot_config.instance_id = instance_id
+          cli.ciborg_config.master = ip_address
+          cli.ciborg_config.instance_id = instance_id
         end
 
         context 'by default' do
@@ -164,11 +164,11 @@ describe Lobot::CLI do
           end
 
           it 'clears the master ip address' do
-            expect { cli.destroy_ec2 }.to change(cli.lobot_config, :master).to(nil)
+            expect { cli.destroy_ec2 }.to change(cli.ciborg_config, :master).to(nil)
           end
 
           it 'clears the master instance id' do
-            expect { cli.destroy_ec2 }.to change(cli.lobot_config, :instance_id).to(nil)
+            expect { cli.destroy_ec2 }.to change(cli.ciborg_config, :instance_id).to(nil)
           end
 
           it 'does not delete sibling instances' do
@@ -190,7 +190,7 @@ describe Lobot::CLI do
             cli.stub(:options).and_return({'all' => 'all'})
           end
 
-          it 'deletes everything tagged "lobot"' do
+          it 'deletes everything tagged "ciborg"' do
             amazon.should_receive(:destroy_ec2).with(a_kind_of(Proc), :all)
             cli.destroy_ec2
           end
@@ -214,8 +214,8 @@ describe Lobot::CLI do
   end
 
   context 'with Vagrant', :vagrant do
-    let(:lobot_config) {
-      Lobot::Config.new(
+    let(:ciborg_config) {
+      Ciborg::Config.new(
           "node_attributes" => {
               "jenkins" => {
                   "builds" => []
@@ -237,7 +237,7 @@ describe Lobot::CLI do
       end
 
       it "updates the config master ip address" do
-        expect { cli.create_vagrant }.to change { lobot_config.master }.to('192.168.33.10')
+        expect { cli.create_vagrant }.to change { ciborg_config.master }.to('192.168.33.10')
       end
     end
 
@@ -259,29 +259,29 @@ describe Lobot::CLI do
       let(:command) { "exit 0" }
 
       let(:godot) { Godot.new(cli.master_server.ip, 8080, timeout: 180) }
-      let(:jenkins) { Lobot::Jenkins.new(lobot_config) }
+      let(:jenkins) { Ciborg::Jenkins.new(ciborg_config) }
 
       before do
         cli.create_vagrant
         cli.bootstrap
         cli.add_build(name, repository, branch, command)
-        FileUtils.mkdir_p("/tmp/lobot_dummy/cookbooks/pork/recipes/")
-        File.write("/tmp/lobot_dummy/cookbooks/pork/recipes/bacon.rb", "package 'htop'")
+        FileUtils.mkdir_p("/tmp/ciborg_dummy/cookbooks/pork/recipes/")
+        File.write("/tmp/ciborg_dummy/cookbooks/pork/recipes/bacon.rb", "package 'htop'")
       end
 
       after do
-        FileUtils.rm_rf("/tmp/lobot_dummy")
+        FileUtils.rm_rf("/tmp/ciborg_dummy")
       end
 
       it "runs chef" do
-        Dir.chdir('/tmp/lobot_dummy/') do
-          cli.lobot_config.recipes = ["pivotal_ci::jenkins", "pivotal_ci::id_rsa", "pivotal_ci::git_config", "sysctl", "pivotal_ci::jenkins_config", "pork::bacon"]
+        Dir.chdir('/tmp/ciborg_dummy/') do
+          cli.ciborg_config.recipes = ["pivotal_ci::jenkins", "pivotal_ci::id_rsa", "pivotal_ci::git_config", "sysctl", "pivotal_ci::jenkins_config", "pork::bacon"]
           cli.chef
         end
 
         sobo.backtick("ls /var/lib/").should include "jenkins"
         sobo.backtick("grep 'kernel.shmmax=' /etc/sysctl.conf").should_not be_empty
-        sobo.backtick("sudo cat /var/lib/jenkins/.ssh/id_rsa").should == lobot_config.github_ssh_key
+        sobo.backtick("sudo cat /var/lib/jenkins/.ssh/id_rsa").should == ciborg_config.github_ssh_key
         sobo.system("dpkg -l htop").should == 0
 
         godot.wait!

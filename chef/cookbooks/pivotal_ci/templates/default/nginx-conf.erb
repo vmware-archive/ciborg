@@ -7,7 +7,7 @@ events {
 }
 
 http {
-  auth_basic            "Lobot Continuous Integration";
+  auth_basic            "Ciborg Continuous Integration";
   auth_basic_user_file  htpasswd;
 
   include      /etc/nginx/mime.types;
@@ -31,7 +31,7 @@ http {
 
   server {
     listen 443 default ssl;
-    
+
     ssl_certificate /etc/certificates/signed.cert;
     ssl_certificate_key /etc/certificates/server.key;
 

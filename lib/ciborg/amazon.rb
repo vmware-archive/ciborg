@@ -1,6 +1,6 @@
 require "fog"
 
-module Lobot
+module Ciborg
   class Amazon
     PORTS_TO_OPEN = [22, 443] + (9000...9010).to_a
 
@@ -29,7 +29,7 @@ module Lobot
 
     def create_security_group(group_name)
       unless fog_security_groups.get(group_name)
-        fog_security_groups.create(:name => group_name, :description => 'Lobot-generated group')
+        fog_security_groups.create(:name => group_name, :description => 'Ciborg-generated group')
       end
     end
 
@@ -51,7 +51,7 @@ module Lobot
     end
 
     def with_key_pair(pubkey)
-      unique_key_pair_name = "LOBOT-#{Time.now.to_i}"
+      unique_key_pair_name = "CIBORG-#{Time.now.to_i}"
       add_key_pair(unique_key_pair_name, pubkey)
       yield unique_key_pair_name if block_given?
     ensure
@@ -63,7 +63,7 @@ module Lobot
         :image_id => "ami-a29943cb",
         :flavor_id => instance_type,
         :availability_zone => "us-east-1b",
-        :tags => {"Name" => "Lobot", "lobot" => Lobot::VERSION},
+        :tags => {"Name" => "Ciborg", "ciborg" => Ciborg::VERSION},
         :key_name => key_pair_name,
         :groups => [security_group_name]
       ).tap do |server|
@@ -85,7 +85,7 @@ module Lobot
     end
 
     def servers
-      fog_servers.select { |s| s.tags.keys.include?("lobot") && s.state == "running" }
+      fog_servers.select { |s| s.tags.keys.include?("ciborg") && s.state == "running" }
     end
 
     def release_elastic_ip(ip)

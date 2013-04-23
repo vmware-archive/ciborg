@@ -1,6 +1,6 @@
 require "haddock"
 
-module Lobot
+module Ciborg
   class Password
     class << self
       def generate

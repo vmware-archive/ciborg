@@ -1,8 +1,8 @@
 # encoding: UTF-8
 require "spec_helper"
 
-describe Lobot::Config do
-  let(:default_config) { Lobot::Config.new }
+describe Ciborg::Config do
+  let(:default_config) { Ciborg::Config.new }
 
   describe "#add_build" do
     let(:name) { "bob" }
@@ -64,8 +64,8 @@ OOTPÜT
 
     context "with a running instance" do
       subject do
-        Lobot::Password.stub(:generate).and_return('password')
-        Lobot::Config.new({instance_id: 'i-xxxxxx',
+        Ciborg::Password.stub(:generate).and_return('password')
+        Ciborg::Config.new({instance_id: 'i-xxxxxx',
                                    master: '127.0.0.1',
                                    instance_size: 'c9.humungous'
                                   })
@@ -97,13 +97,13 @@ OOTPÜT
   describe "with a file" do
     let(:config_contents) { {ssh_port: 42} }
     let(:tempfile) do
-      Tempfile.new('lobot-config').tap do |file|
+      Tempfile.new('ciborg-config').tap do |file|
         file.write YAML.dump(config_contents)
         file.close
       end
     end
 
-    let(:config) { Lobot::Config.from_file(tempfile.path) }
+    let(:config) { Ciborg::Config.from_file(tempfile.path) }
 
     describe "#valid?" do
       it "returns true by default" do
@@ -138,7 +138,7 @@ OOTPÜT
       end
 
       context "when the yaml file does not exist" do
-        let(:config) { Lobot::Config.from_file("#{tempfile.path}-nonexistent") }
+        let(:config) { Ciborg::Config.from_file("#{tempfile.path}-nonexistent") }
 
         it "does not load from a yaml file" do
           config.ssh_port.should == 22
@@ -147,16 +147,16 @@ OOTPÜT
 
       context "handles deprecated keypair_name attribute" do
         let(:tempfile) do
-          Tempfile.new('lobot-config').tap do |file|
+          Tempfile.new('ciborg-config').tap do |file|
             file.write <<-YAML
 ---
 ssh_port: 42
-keypair_name: lobot
+keypair_name: ciborg
             YAML
             file.close
           end
         end
-        let(:config) { Lobot::Config.from_file(tempfile.path) }
+        let(:config) { Ciborg::Config.from_file(tempfile.path) }
 
         it "silently removes it from the configuration" do
           config.ssh_port.should == 42
@@ -169,7 +169,7 @@ keypair_name: lobot
       it "writes the values to the file" do
         config.ssh_port = 20912
         config.save
-        config = Lobot::Config.from_file(tempfile.path)
+        config = Ciborg::Config.from_file(tempfile.path)
         config.ssh_port.should == 20912
       end
     end
@@ -177,7 +177,7 @@ keypair_name: lobot
     describe "#update" do
       it "sets and persists the provided values" do
         config.update(ssh_port: 20912)
-        config = Lobot::Config.from_file(tempfile.path)
+        config = Ciborg::Config.from_file(tempfile.path)
         config.ssh_port.should == 20912
       end
     end
@@ -210,7 +210,7 @@ keypair_name: lobot
     its(:recipes) { should == ["pivotal_ci::jenkins", "pivotal_ci::limited_travis_ci_environment", "pivotal_ci"] }
     its(:cookbook_paths) { should == ['./chef/cookbooks/', './chef/travis-cookbooks/ci_environment', './chef/project-cookbooks'] }
     its(:instance_size) { should == 'c1.medium' }
-    its(:security_group) { should == 'lobot'}
+    its(:security_group) { should == 'ciborg'}
 
     context 'when id_rsa exists' do
       before { File.stub(:exists?).and_return(true) }

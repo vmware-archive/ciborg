@@ -11,8 +11,8 @@ jenkins_plugin = Proc.new do |resource, plugin, url|
   resource.notifies :restart, "service[jenkins]"
 end
 
-execute "download lobot plugin" do
-  jenkins_plugin.call(self, "lobot", "http://cheffiles.pivotallabs.com/lobot/lobot.hpi")
+execute "download ciborg plugin" do
+  jenkins_plugin.call(self, "lobot", "http://cheffiles.pivotallabs.com/ciborg/ciborg.hpi")
 end
 
 ['git-client', 'git', 'ansicolor', 'xvfb', 'greenballs'].each do |plugin|

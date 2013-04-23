@@ -1,6 +1,6 @@
 require "httpclient"
 
-module Lobot
+module Ciborg
   class Keychain
     attr_reader :config, :path
 
@@ -17,7 +17,7 @@ module Lobot
     end
 
     def add_certificate(certificate)
-      certificate_file = Tempfile.new("lobot.crt").tap do |f|
+      certificate_file = Tempfile.new("ciborg.crt").tap do |f|
         f.write(certificate)
         f.close
       end

@@ -6,5 +6,5 @@ end
 
 guard 'bundler' do
   watch('Gemfile')
-  watch('lobot.gemspec')
+  watch('ciborg.gemspec')
 end

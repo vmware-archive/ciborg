@@ -1,7 +1,7 @@
 require "spec_helper"
 
-describe Lobot::Keychain, :osx do
-  subject { Lobot::Keychain.new("/Library/Keychains/System.keychain") }
+describe Ciborg::Keychain, :osx do
+  subject { Ciborg::Keychain.new("/Library/Keychains/System.keychain") }
 
   describe "#has_key?" do
     it "returns true if a certificate exists" do
@@ -25,9 +25,9 @@ describe Lobot::Keychain, :osx do
 
     it "adds the certificate and trusts it to the utmost" do
       subject.add_certificate(certificate)
-      subject.has_key?("lobot_test_certificate").should be_true
+      subject.has_key?("ciborg_test_certificate").should be_true
     end
 
-    after { system("sudo security delete-certificate -c lobot_test_certificate") }
+    after { system("sudo security delete-certificate -c ciborg_test_certificate") }
   end
 end

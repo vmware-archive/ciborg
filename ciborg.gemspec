@@ -1,18 +1,18 @@
 # -*- encoding: utf-8 -*-
 $:.push File.expand_path("../lib", __FILE__)
-require "lobot/version"
+require "ciborg/version"
 
 Gem::Specification.new do |s|
-  s.name        = "lobot"
-  s.version     = Lobot::VERSION
+  s.name        = "ciborg"
+  s.version     = Ciborg::VERSION
   s.platform    = Gem::Platform::RUBY
   s.authors     = ["Matthew Kocher", "Lee Edwards", "Brian Cunnie", "Doc Ritezel"]
-  s.email       = ["lobot@pivotallabs.com"]
-  s.homepage    = "https://github.com/pivotal/lobot"
-  s.summary     = %q{CI in the Cloud: Jenkins + EC2 = Lobot}
+  s.email       = ["ciborg@pivotallabs.com"]
+  s.homepage    = "https://github.com/pivotal/ciborg"
+  s.summary     = %q{CI in the Cloud: Jenkins + EC2 = Ciborg}
   s.description = %q{Rails generators that make it easy to spin up a CI instance in the cloud.}
 
-  s.rubyforge_project = "lobot"
+  s.rubyforge_project = "ciborg"
 
   s.files         = `git ls-files`.split("\n") + `cd chef/travis-cookbooks && git ls-files`.split("\n").map { |f| "chef/travis-cookbooks/#{f}" }
   s.executables   = `git ls-files -- bin`.split("\n").map{ |f| File.basename(f) }

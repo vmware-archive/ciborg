@@ -1,6 +1,6 @@
 $: << File.expand_path("../../lib", __FILE__)
 
-require "lobot"
+require "ciborg"
 require "godot"
 require "tempfile"
 

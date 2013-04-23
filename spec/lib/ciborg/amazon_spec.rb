@@ -1,7 +1,7 @@
 require "spec_helper"
 
-describe Lobot::Amazon, :slow do
-  subject(:amazon) { Lobot::Amazon.new(ENV["EC2_KEY"], ENV["EC2_SECRET"]) }
+describe Ciborg::Amazon, :slow do
+  subject(:amazon) { Ciborg::Amazon.new(ENV["EC2_KEY"], ENV["EC2_SECRET"]) }
   let(:tempdir) { Dir.mktmpdir }
   let(:fog) { amazon.send(:fog) }
 
@@ -105,7 +105,7 @@ describe Lobot::Amazon, :slow do
 
         freshly_launched_server.availability_zone.should =~ /us-east-1[abcd]/
         freshly_launched_server.flavor_id.should == "t1.micro"
-        freshly_launched_server.tags.should == {"lobot" => Lobot::VERSION, "Name" => "Lobot"}
+        freshly_launched_server.tags.should == {"ciborg" => Ciborg::VERSION, "Name" => "Ciborg"}
         freshly_launched_server.key_name.should == key_pair_name
         freshly_launched_server.groups.should == [security_group]
         freshly_launched_server.public_ip_address.should == amazon.elastic_ip_address.public_ip

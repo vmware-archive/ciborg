@@ -1,7 +1,7 @@
 require "spec_helper"
 
-module Lobot
-  describe Lobot::Password do
+module Ciborg
+  describe Ciborg::Password do
     it "generates a random password" do
       Haddock::Password.should_receive(:generate)
       described_class.generate

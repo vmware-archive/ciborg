@@ -1,10 +1,10 @@
 require "thor"
 
-module Lobot
+module Ciborg
   class ConfigurationWizard < ::Thor
     include Actions
 
-    DESCRIPTION_TEXT = "Sets up lobot through a series of questions"
+    DESCRIPTION_TEXT = "Sets up ciborg through a series of questions"
 
     default_task :setup
 
@@ -91,7 +91,7 @@ module Lobot
       end
 
       def config
-        @config ||= Lobot::Config.from_file(lobot_config_path)
+        @config ||= Ciborg::Config.from_file(ciborg_config_path)
       end
     end
 
@@ -110,13 +110,13 @@ module Lobot
       File.exists?('script/rails')
     end
 
-    def lobot_config_path
+    def ciborg_config_path
       FileUtils.mkdir_p(File.join(Dir.pwd, "config"))
-      File.expand_path("config/lobot.yml", Dir.pwd)
+      File.expand_path("config/ciborg.yml", Dir.pwd)
     end
 
     def cli
-      Lobot::CLI.new
+      Ciborg::CLI.new
     end
   end
 end

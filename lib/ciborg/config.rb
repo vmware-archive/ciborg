@@ -1,7 +1,7 @@
 # encoding: UTF-8
 require "hashie"
 
-module Lobot
+module Ciborg
   class Config < Hashie::Dash
     property :path
     property :aws_key
@@ -16,7 +16,7 @@ module Lobot
     property :recipes, :default => ["pivotal_ci::jenkins", "pivotal_ci::limited_travis_ci_environment", "pivotal_ci"]
     property :cookbook_paths, :default => ['./chef/cookbooks/', './chef/travis-cookbooks/ci_environment', './chef/project-cookbooks']
     property :node_attributes, :default => Proc.new { default_node_attributes }
-    property :security_group, :default => 'lobot'
+    property :security_group, :default => 'ciborg'
 
     def initialize(attributes = {})
       super
@@ -202,7 +202,7 @@ OOTPÜT
         },
         :nginx => {
           :basic_auth_user => "ci",
-          :basic_auth_password => Lobot::Password.generate
+          :basic_auth_password => Ciborg::Password.generate
         },
         :jenkins => {
           :builds => []

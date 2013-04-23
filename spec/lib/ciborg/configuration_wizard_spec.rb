@@ -1,9 +1,9 @@
 require 'spec_helper'
 
-describe Lobot::ConfigurationWizard do
+describe Ciborg::ConfigurationWizard do
   let(:working_path) { Dir.mktmpdir }
   let(:cli) { double(:cli).as_null_object }
-  let(:wizard) { Lobot::ConfigurationWizard.new }
+  let(:wizard) { Ciborg::ConfigurationWizard.new }
 
   before { wizard.stub(:cli => cli) }
 
@@ -20,20 +20,20 @@ describe Lobot::ConfigurationWizard do
       }.from(false).to(true)
     end
 
-    it "uses the values in your existing lobot.yml" do
+    it "uses the values in your existing ciborg.yml" do
       FileUtils.mkdir_p "config"
-      config = Lobot::Config.new(:path => "config/lobot.yml")
+      config = Ciborg::Config.new(:path => "config/ciborg.yml")
       config.ssh_port = 2222
       config.save
 
       wizard.config.ssh_port.should == 2222
     end
 
-    it "saves off the config to config/lobot.yml" do
+    it "saves off the config to config/ciborg.yml" do
       expect {
         wizard.config.save
       }.to change {
-        File.exists?(File.join(working_path, "config", "lobot.yml"))
+        File.exists?(File.join(working_path, "config", "ciborg.yml"))
       }.from(false).to(true)
     end
   end
@@ -164,11 +164,11 @@ describe Lobot::ConfigurationWizard do
     before { wizard.stub(:say) }
 
     it "reads in security group" do
-      wizard.should_receive(:ask).and_return("lobot")
+      wizard.should_receive(:ask).and_return("ciborg")
 
       wizard.prompt_for_security_group
 
-      wizard.config.security_group.should == "lobot"
+      wizard.config.security_group.should == "ciborg"
     end
   end
 
