@@ -132,7 +132,7 @@ describe Ciborg::CLI do
           it "launches the instance with the configured security group" do
             amazon.should_receive(:create_security_group).with('custom_group')
             amazon.should_receive(:open_port).with('custom_group', anything, anything)
-            amazon.should_receive(:launch_server).with(anything, 'custom_group', anything)
+            amazon.should_receive(:launch_server).with(anything, 'custom_group', anything, anything)
             cli.create
           end
         end
@@ -141,7 +141,7 @@ describe Ciborg::CLI do
           before { cli.ciborg_config.instance_size = 'really_big_instance' }
 
           it "launches the instance with the configured instance size" do
-            amazon.should_receive(:launch_server).with(anything, anything, 'really_big_instance')
+            amazon.should_receive(:launch_server).with(anything, anything, 'really_big_instance', 'us-east-1b')
             cli.create
           end
         end

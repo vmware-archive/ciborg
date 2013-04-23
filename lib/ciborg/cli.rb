@@ -25,7 +25,7 @@ module Ciborg
       server = amazon.with_key_pair(ciborg_config.server_ssh_pubkey) do |keypair_name|
         amazon.create_security_group(ciborg_config.security_group)
         amazon.open_port(ciborg_config.security_group, 22, 443)
-        amazon.launch_server(keypair_name, ciborg_config.security_group, ciborg_config.instance_size)
+        amazon.launch_server(keypair_name, ciborg_config.security_group, ciborg_config.instance_size, ciborg_config.availability_zone)
       end
       wait_for_server(server)
 

@@ -12,7 +12,7 @@ jenkins_plugin = Proc.new do |resource, plugin, url|
 end
 
 execute "download ciborg plugin" do
-  jenkins_plugin.call(self, "lobot", "http://cheffiles.pivotallabs.com/ciborg/ciborg.hpi")
+  jenkins_plugin.call(self, "ciborg", "http://cheffiles.pivotallabs.com/ciborg/ciborg.hpi")
 end
 
 ['git-client', 'git', 'ansicolor', 'xvfb', 'greenballs'].each do |plugin|
