@@ -6,11 +6,11 @@
     <version>1.399</version><!-- which version of Jenkins is this plugin built against? -->
   </parent>
 
-  <groupId>com.pivotallabs.jenkins.lobotplugin</groupId>
-  <artifactId>jenkins-lobot-plugin</artifactId>
+  <groupId>com.pivotallabs.jenkins.ciborgplugin</groupId>
+  <artifactId>jenkins-ciborg-plugin</artifactId>
   <version>1.0</version>
   <packaging>hpi</packaging>
-  <name>Jenkins Lobot Plugin</name>
+  <name>Jenkins Ciborg Plugin</name>
 
   <!-- get every artifact through maven.glassfish.org, which proxies all the artifacts that we need -->
   <repositories>
@@ -27,13 +27,7 @@
     </pluginRepository>
   </pluginRepositories>
 
-  <scm>
-    <connection>scm:git:ssh://github.com/ohrite/jenkins-lobot-plugin.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com/ohrite/jenkins-lobot-plugin.git</developerConnection>
-    <url>https://github.com/ohrite/jenkins-lobot-plugin</url>
-  </scm>
-
-  <url>http://github.com/ohrite/jenkins-lobot-plugin</url>
+  <url>https://github.com/pivotal/ciborg</url>
 
   <developers>
     <developer>

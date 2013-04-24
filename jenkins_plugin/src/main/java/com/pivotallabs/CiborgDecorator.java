@@ -7,9 +7,9 @@ import net.sf.json.JSONObject;
 import org.kohsuke.stapler.StaplerRequest;
 
 @Extension
-public class LobotDecorator extends PageDecorator {
-  public LobotDecorator() {
-    super(LobotDecorator.class);
+public class CiborgDecorator extends PageDecorator {
+  public CiborgDecorator() {
+    super(CiborgDecorator.class);
     load();
   }
 
