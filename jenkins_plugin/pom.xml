@@ -1,0 +1,45 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.jenkins-ci.plugins</groupId>
+    <artifactId>plugin</artifactId>
+    <version>1.399</version><!-- which version of Jenkins is this plugin built against? -->
+  </parent>
+
+  <groupId>com.pivotallabs.jenkins.lobotplugin</groupId>
+  <artifactId>jenkins-lobot-plugin</artifactId>
+  <version>1.0</version>
+  <packaging>hpi</packaging>
+  <name>Jenkins Lobot Plugin</name>
+
+  <!-- get every artifact through maven.glassfish.org, which proxies all the artifacts that we need -->
+  <repositories>
+    <repository>
+      <id>repo.jenkins-ci.org</id>
+      <url>http://repo.jenkins-ci.org/public/</url>
+    </repository>
+  </repositories>
+
+  <pluginRepositories>
+    <pluginRepository>
+      <id>repo.jenkins-ci.org</id>
+      <url>http://repo.jenkins-ci.org/public/</url>
+    </pluginRepository>
+  </pluginRepositories>
+
+  <scm>
+    <connection>scm:git:ssh://github.com/ohrite/jenkins-lobot-plugin.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/ohrite/jenkins-lobot-plugin.git</developerConnection>
+    <url>https://github.com/ohrite/jenkins-lobot-plugin</url>
+  </scm>
+
+  <url>http://github.com/ohrite/jenkins-lobot-plugin</url>
+
+  <developers>
+    <developer>
+      <id>ohrite</id>
+      <name>Doc Ritezel</name>
+      <email>ritezel@gmail.com</email>
+    </developer>
+  </developers>
+</project>
