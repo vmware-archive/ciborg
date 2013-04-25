@@ -4,6 +4,10 @@ require "ciborg"
 require "godot"
 require "tempfile"
 
+# Cleanup vagrant instance that may have been running from previous tests,
+# since it seemed to be causing test pollution and flaky tests.
+`vagrant destroy --force`
+
 module SpecHelpers
   def self.ec2_credentials_present?
     ENV.has_key?("EC2_KEY") && ENV.has_key?("EC2_SECRET")
