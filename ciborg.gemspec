@@ -30,9 +30,8 @@ Gem::Specification.new do |s|
   s.add_development_dependency "rspec"
   s.add_development_dependency "guard-rspec"
   s.add_development_dependency "guard-bundler"
-  s.add_development_dependency "test-kitchen"
+  s.add_development_dependency "test-kitchen", "~> 1.0.0.alpha.5"
 
   s.add_development_dependency "terminal-notifier-guard"
   s.add_development_dependency "rb-fsevent"
-  s.add_development_dependency "vagrant", "~> 1.0"
 end
