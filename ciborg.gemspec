@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
   s.email       = ["ciborg@pivotallabs.com"]
   s.homepage    = "https://github.com/pivotal/ciborg"
   s.summary     = %q{CI in the Cloud: Jenkins + EC2 = Ciborg}
-  s.description = %q{Rails generators that make it easy to spin up a CI instance in the cloud.}
+  s.description = %q{Rails generators that make it easy to spin up a CI instance in the cloud. Formerly known as 'Lobot'.}
 
   s.rubyforge_project = "ciborg"
 
