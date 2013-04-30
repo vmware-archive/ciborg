@@ -89,7 +89,7 @@ Because we're using the cookbooks from Travis CI, you can look through [all the 
 
 ## Manually starting your ciborg instance
 
-1. Launch an instance, allocate and associates an elastic IP and updates config/ciborg.yml:
+1. Launch an instance, allocate and associate an elastic IP and update config/ciborg.yml:
 
         ciborg create
 
