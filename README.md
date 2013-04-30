@@ -164,6 +164,7 @@ We welcome pull requests.  Pull requests should have test coverage for quick con
 * Check out past discussions on the [google groups forum](https://groups.google.com/a/pivotallabs.com/forum/#!forum/ciborg)
 * Send the list an email at ciborg@pivotallabs.com
 * View the project backlog on [Pivotal Tracker](https://www.pivotaltracker.com/s/projects/278959)
+* View the project CI status at [ci.pivotallabs.com](http://ci.pivotallabs.com/)
 
 # License
 
