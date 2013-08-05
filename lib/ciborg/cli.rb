@@ -115,7 +115,7 @@ module Ciborg
       end
 
       def amazon
-        @amazon ||= Ciborg::Amazon.new(ciborg_config.aws_key, ciborg_config.aws_secret)
+        @amazon ||= Ciborg::Amazon.new(ciborg_config.aws_key, ciborg_config.aws_secret, ciborg_config.aws_region)
       end
 
       def keychain

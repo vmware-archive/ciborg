@@ -6,6 +6,7 @@ module Ciborg
     property :path
     property :aws_key
     property :aws_secret
+    property :aws_region, :default => 'us-east-1'
     property :instance_id
     property :master
 
@@ -17,7 +18,7 @@ module Ciborg
     property :cookbook_paths, :default => ['./chef/cookbooks/', './chef/travis-cookbooks/ci_environment', './chef/project-cookbooks']
     property :node_attributes, :default => Proc.new { default_node_attributes }
     property :security_group, :default => 'ciborg'
-    property :availability_zone, :default => "us-east-1b"
+    property :availability_zone
 
     def initialize(attributes = {})
       super

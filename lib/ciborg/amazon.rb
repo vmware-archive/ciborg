@@ -4,11 +4,23 @@ module Ciborg
   class Amazon
     PORTS_TO_OPEN = [22, 443] + (9000...9010).to_a
 
-    attr_reader :key, :secret
+    AWS_REGION_AMI = {
+      'us-east-1' => 'ami-a29943cb',
+      'us-west-1' => 'ami-87712ac2',
+      'us-west-2' => 'ami-20800c10',
+      'eu-west-1' => 'ami-e1e8d395',
+      'ap-southeast-1' => 'ami-a4ca8df6',
+      'ap-southeast-2' => 'ami-974ddead',
+      'ap-northeast-1' => 'ami-60c77761',
+      'sa-east-1' => 'ami-8cd80691'
+    }
 
-    def initialize(key, secret)
+    attr_reader :key, :secret, :region
+
+    def initialize(key, secret, region)
       @key = key
       @secret = secret
+      @region = region
     end
 
     def fog_security_groups
@@ -58,9 +70,9 @@ module Ciborg
       delete_key_pair(unique_key_pair_name)
     end
 
-    def launch_server(key_pair_name, security_group_name, instance_type = "m1.medium", availability_zone = "us-east-1b")
+    def launch_server(key_pair_name, security_group_name, instance_type = "m1.medium", availability_zone = nil)
       fog_servers.create(
-        :image_id => "ami-a29943cb",
+        :image_id => AWS_REGION_AMI[region],
         :flavor_id => instance_type,
         :availability_zone => availability_zone,
         :tags => {"Name" => "Ciborg", "ciborg" => Ciborg::VERSION},
@@ -98,7 +110,8 @@ module Ciborg
       @fog ||= Fog::Compute.new(
         :provider => "aws",
         :aws_access_key_id => key,
-        :aws_secret_access_key => secret
+        :aws_secret_access_key => secret,
+        :region => region
       )
     end
   end

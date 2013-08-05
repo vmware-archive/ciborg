@@ -36,6 +36,7 @@ module Ciborg
         say("For your AWS Access Key and Secret, see https://aws-portal.amazon.com/gp/aws/developer/account/index.html?ie=UTF8&action=access-key")
         config.aws_key = ask_with_default("Your AWS key", config.aws_key)
         config.aws_secret = ask_with_default("Your AWS secret key", config.aws_secret)
+        config.aws_region = ask_with_default("Your AWS region", config.aws_region)
       end
 
       def prompt_for_security_group

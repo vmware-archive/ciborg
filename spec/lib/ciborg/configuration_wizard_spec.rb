@@ -152,11 +152,13 @@ describe Ciborg::ConfigurationWizard do
     it "reads in the key and secret" do
       wizard.should_receive(:ask).and_return("aws-key")
       wizard.should_receive(:ask).and_return("aws-secret-key")
+      wizard.should_receive(:ask).and_return("aws-region")
 
       wizard.prompt_for_aws
 
       wizard.config.aws_key.should == "aws-key"
       wizard.config.aws_secret.should == "aws-secret-key"
+      wizard.config.aws_region.should == "aws-region"
     end
   end
 
