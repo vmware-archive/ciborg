@@ -215,10 +215,12 @@ describe Ciborg::ConfigurationWizard do
     end
 
     context "when there are no builds" do
+      let(:desired_build_command) { "build.sh" }
+
       before do
         wizard.should_receive(:ask_with_default).with("What is the address of your git repository?", nil).ordered.and_return("Fort-Knox")
         wizard.should_receive(:ask_with_default).with("What would you like to name your build?", nil).ordered.and_return("fancy-build")
-        wizard.should_receive(:ask_with_default).with("What command should be run during the build?", nil).ordered.and_return("build.sh")
+        wizard.should_receive(:ask_with_default).with("What command should be run during the build?", nil).ordered.and_return(desired_build_command)
       end
 
       it "asks you for the build name" do
@@ -234,7 +236,16 @@ describe Ciborg::ConfigurationWizard do
       context "when it is not a rails project or the user does not want the sample build script" do
         it "asks you for the build command" do
           wizard.prompt_for_build
-          first_jenkins_build["command"].should == "build.sh"
+          first_jenkins_build["command"].should == desired_build_command
+        end
+      end
+
+      context "when the user does not enter a build command" do
+        let(:desired_build_command) { nil }
+
+        it "sets the build command to be an empty string" do
+          wizard.prompt_for_build
+          first_jenkins_build["command"].should == ""
         end
       end
 
@@ -242,7 +253,6 @@ describe Ciborg::ConfigurationWizard do
         wizard.prompt_for_build
         first_jenkins_build["branch"].should == "master"
       end
-
     end
 
     context "when the project is a rails project" do

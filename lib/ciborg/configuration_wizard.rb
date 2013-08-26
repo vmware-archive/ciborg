@@ -58,18 +58,17 @@ module Ciborg
       def prompt_for_build
         build = config.node_attributes.jenkins.builds.first || {}
 
-        if this_is_a_rails_project? && prompt_for_default_rails_script
-          build_command = Proc.new { "script/ci_build.sh" }
-          copy_file('default_rails_build_script.sh', 'script/ci_build.sh')
-        else
-          build_command = Proc.new { ask_with_default("What command should be run during the build?", build["command"]) }
-        end
-
         repository = ask_with_default("What is the address of your git repository?", build["repository"])
         name = ask_with_default("What would you like to name your build?", build["name"])
-        command = build_command.call
-        branch = "master"
 
+        if this_is_a_rails_project? && prompt_for_default_rails_script
+          command = "script/ci_build.sh"
+          copy_file("default_rails_build_script.sh", command)
+        else
+          command = ask_with_default("What command should be run during the build?", build["command"]).to_s
+        end
+
+        branch = "master"
         config.add_build name, repository, branch, command
       end
 
