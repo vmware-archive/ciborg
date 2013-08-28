@@ -155,11 +155,11 @@ describe Ciborg::CLI do
 
         context 'by default' do
           before do
-            amazon.stub(:destroy_ec2).and_yield(mock("SERVER").as_null_object)
+            amazon.stub(:destroy_ec2).and_yield(double("SERVER").as_null_object)
           end
 
           it 'deletes the known instance' do
-            amazon.should_receive(:destroy_ec2).and_yield(mock("SERVER").as_null_object)
+            amazon.should_receive(:destroy_ec2).and_yield(double("SERVER").as_null_object)
             cli.destroy_ec2
           end
 
@@ -179,7 +179,7 @@ describe Ciborg::CLI do
           it 'prompts for confirmation' do
             cli.should_receive(:yes?).and_return(true)
             amazon.should_receive(:destroy_ec2).with(a_kind_of(Proc), instance_id) do |confirm_proc, instance_id|
-              confirm_proc.call(mock("SERVER").as_null_object)
+              confirm_proc.call(double("SERVER").as_null_object)
             end
             cli.destroy_ec2
           end
@@ -204,7 +204,7 @@ describe Ciborg::CLI do
           it 'does not prompt for confirmation' do
             cli.should_not_receive(:ask)
             amazon.should_receive(:destroy_ec2).with(a_kind_of(Proc), instance_id) do |confirm_proc, instance_id|
-              confirm_proc.call(mock("SERVER").as_null_object)
+              confirm_proc.call(double("SERVER").as_null_object)
             end
             cli.destroy_ec2
           end
@@ -233,7 +233,7 @@ describe Ciborg::CLI do
     describe "#create_vagrant" do
       it "starts a virtual machine" do
         cli.create_vagrant
-        Godot.wait('192.168.33.10', 22).should be
+        wait_for { sobo.system("ls") == 0 }
       end
 
       it "updates the config master ip address" do
@@ -257,8 +257,6 @@ describe Ciborg::CLI do
       let(:repository) { "http://github.com/mkocher/soloist.git" }
       let(:branch) { "master" }
       let(:command) { "exit 0" }
-
-      let(:godot) { Godot.new(cli.master_server.ip, 8080, timeout: 180) }
       let(:jenkins) { Ciborg::Jenkins.new(ciborg_config) }
 
       before do
@@ -275,7 +273,16 @@ describe Ciborg::CLI do
 
       it "runs chef" do
         Dir.chdir('/tmp/ciborg_dummy/') do
-          cli.ciborg_config.recipes = ["pivotal_ci::jenkins", "pivotal_ci::id_rsa", "pivotal_ci::git_config", "sysctl", "pivotal_ci::jenkins_config", "pork::bacon"]
+          cli.ciborg_config.recipes = [
+            "pivotal_ci::jenkins",
+            "sysctl",
+            "pivotal_ci::ssl_certificate",
+            "pivotal_ci::nginx",
+            "pivotal_ci::id_rsa",
+            "pivotal_ci::git_config",
+            "pivotal_ci::jenkins_config",
+            "pork::bacon"
+          ]
           cli.chef
         end
 
@@ -284,9 +291,21 @@ describe Ciborg::CLI do
         sobo.backtick("sudo cat /var/lib/jenkins/.ssh/id_rsa").should == ciborg_config.github_ssh_key
         sobo.system("dpkg -l htop").should == 0
 
-        godot.wait!
-        godot.match!(/Bob/, 'api/json')
+        options = [
+          "--insecure",
+          "--user #{ciborg_config.basic_auth_user}:#{ciborg_config.basic_auth_password}"
+        ]
+
+        wait_for do
+          `curl #{options.join(' ')} https://#{cli.master_server.ip}/api/json`.include?("Bob")
+        end
+
+        `curl http://#{cli.master_server.ip}:8080/api/json`.should_not include("Bob")
       end
     end
+  end
+
+  def wait_for(&block)
+    Timeout.timeout(180) { sleep 1 until block.call }
   end
 end

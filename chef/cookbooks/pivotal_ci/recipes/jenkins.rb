@@ -21,6 +21,12 @@ execute "usermod jenkins -aG rvm" do
   not_if "groups jenkins | grep rvm"
 end
 
+jenkins_flags = "--httpListenAddress=127.0.0.1"
+jenkins_config_file = "/etc/default/jenkins"
+execute %(echo 'JENKINS_ARGS="$JENKINS_ARGS #{jenkins_flags}"' >> #{jenkins_config_file}) do
+  not_if "grep -e '#{jenkins_flags}' #{jenkins_config_file}"
+end
+
 service "jenkins" do
-  action :start
+  action :restart
 end
