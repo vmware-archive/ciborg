@@ -1,7 +1,9 @@
 require "httpclient"
+require "stringio"
 
 module Ciborg
   class Keychain
+    EXPECTED_SECURITY_STDERR = "at depth 0 - 20: unable to get local issuer certificate\n"
     attr_reader :config, :path
 
     def initialize(keychain_path)
@@ -13,7 +15,12 @@ module Ciborg
     end
 
     def fetch_remote_certificate(host)
-      http_client.get(host).peer_cert.to_s
+      cert_s = nil
+      stderr = capture_stderr { cert_s = http_client.get(host).peer_cert.to_s }
+      if stderr != EXPECTED_SECURITY_STDERR
+        $stderr.print stderr
+      end
+      cert_s
     end
 
     def add_certificate(certificate)
@@ -22,7 +29,7 @@ module Ciborg
         f.close
       end
 
-      system("sudo security add-trusted-cert -d -r trustAsRoot -k /Library/Keychains/System.keychain #{certificate_file.path}")
+      system("sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain #{certificate_file.path}")
     end
 
     private
@@ -31,6 +38,14 @@ module Ciborg
         HTTPClient.new.tap do |hc|
           hc.ssl_config.verify_mode = OpenSSL::SSL::VERIFY_NONE
         end
+    end
+
+    def capture_stderr
+      previous_stderr, $stderr = $stderr, StringIO.new
+      yield
+      $stderr.string
+    ensure
+      $stderr = previous_stderr
     end
   end
 end

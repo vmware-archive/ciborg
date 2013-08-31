@@ -1,5 +1,6 @@
 cert_path = node["ssl_settings"]["cert_path"]
 ca_path = node["ssl_settings"]["ca_path"]
+cert_cn_path = node["ssl_settings"]["cert_cn_path"]
 
 ["/etc/pki/tls/certs", "/usr/local", "/usr/local/etc", cert_path, ca_path, "#{ca_path}/keys", "#{ca_path}/requests", "#{ca_path}/certs", "#{ca_path}/newcerts"].each do |dir|
   directory dir do
@@ -12,6 +13,10 @@ file "#{ca_path}/index.txt.attr" do
 end
 
 file "#{ca_path}/index.txt"
+
+execute "save ip to cert_cn_path" do
+  command("ifconfig | egrep 'inet ' | sed -e 's/inet //' -e 's/addr://' -e 's/ Bcast.*//' -e 's/^ *//' -e 's/ *$//' -e 's/^127\\..*//' -e 's/^10\\..*//' -e '/^$/d' > #{cert_cn_path}")
+end
 
 execute "create serial" do
   command "echo '01\n' > #{ca_path}/serial"
@@ -34,7 +39,7 @@ execute "generate server key" do
 end
 
 execute "generate request" do
-  command "openssl req -new -key #{cert_path}/server.key -out #{cert_path}/request.csr -subj '/CN=#{node["ssl_settings"]["common_name"]}/OU=Org Unit/O=My Org Pty Ltd/L=Sydney/ST=NSW/C=AU/emailAddr=someoneATexample.com'"
+  command "sh -c \"openssl req -new -key #{cert_path}/server.key -out #{cert_path}/request.csr -subj '/CN=`cat #{cert_cn_path}`/OU=Org Unit/O=My Org Pty Ltd/L=Sydney/ST=NSW/C=AU/emailAddr=someoneATexample.com'\""
   not_if { ::File.exists?("#{cert_path}/request.csr")}
 end
 
