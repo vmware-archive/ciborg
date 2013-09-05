@@ -54,15 +54,6 @@
       <command><%= CGI.escapeHTML @command %></command>
     </hudson.tasks.Shell>
   </builders>
-  <publishers>
-    <% if @junit_publisher %>
-        <hudson.tasks.junit.JUnitResultArchiver>
-          <testResults>spec/reports/*.xml</testResults>
-          <keepLongStdio>false</keepLongStdio>
-          <testDataPublishers/>
-        </hudson.tasks.junit.JUnitResultArchiver>
-    <% end %>
-  </publishers>
   <buildWrappers>
     <hudson.plugins.ansicolor.AnsiColorBuildWrapper>
       <colorMapName>xterm</colorMapName>

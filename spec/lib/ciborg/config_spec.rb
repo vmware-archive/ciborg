@@ -14,8 +14,7 @@ describe Ciborg::Config do
       "name" => name,
       "repository" => repository,
       "command" => command,
-      "branch" => branch,
-      "junit_publisher" => true
+      "branch" => branch
     } }
 
     it "adds a build to the node attributes" do

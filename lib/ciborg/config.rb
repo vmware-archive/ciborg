@@ -29,8 +29,7 @@ module Ciborg
         "name" => name,
         "repository" => repository,
         "branch" => branch,
-        "command" => command,
-        "junit_publisher" => true
+        "command" => command
       }
       self.node_attributes = self.node_attributes.tap do |config|
         config.jenkins.builds << build unless config.jenkins.builds.include?(build)
