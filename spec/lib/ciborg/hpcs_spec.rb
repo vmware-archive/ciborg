@@ -106,7 +106,7 @@ describe Ciborg::Hpcs, :slow do
         # EC2 does not always reap these resources fast enough for our tests, we could wait, but why bother?
         hpcs.elastic_ip_address.destroy rescue nil
         sleep(5)
-        hpcs.fog_security_groups.get(security_group).destroy rescue nil
+        hpcs.fog_security_groups.get(hpcs.fog_security_group_name_to_id(security_group)).destroy rescue nil
       end
     end
 
@@ -117,7 +117,7 @@ describe Ciborg::Hpcs, :slow do
         freshly_launched_server.name.should == "Ciborg"
         freshly_launched_server.key_name.should == key_pair_name
         freshly_launched_server.security_groups.first["name"].should == security_group
-        freshly_launched_server.addresses["private"].map { |ip_addr| ip_addr.flatten }.flatten.should include(hpcs.elastic_ip_address.ip)
+        freshly_launched_server.addresses["private"].map { |ip_addr| ip_addr["addr"] }.flatten.should include(hpcs.elastic_ip_address.ip)
       end
     end
 
@@ -158,6 +158,24 @@ describe Ciborg::Hpcs, :slow do
         end
       end
     end
-
   end
+
+  describe "#elastic_ip_address" do
+    it "allocates an ip address" do
+      expect { hpcs.elastic_ip_address }.to change { fog.addresses.reload.count }.by(1)
+      hpcs.elastic_ip_address.ip.should =~ /\d+\.\d+\.\d+\.\d+/
+      hpcs.elastic_ip_address.destroy
+    end
+  end
+
+  describe "#release_elastic_ip" do
+    let!(:elastic_ip) { hpcs.elastic_ip_address }
+
+    it "releases the ip" do
+      expect do
+        hpcs.release_elastic_ip(elastic_ip.ip)
+      end.to change { fog.addresses.reload.count }.by(-1)
+    end
+  end
+
 end

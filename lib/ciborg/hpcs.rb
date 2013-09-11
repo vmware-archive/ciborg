@@ -42,6 +42,17 @@ module Ciborg
       @elastic_ip_address ||= fog.addresses.create
     end
 
+    def release_elastic_ip(ip)
+      fog.addresses.get(fog_ip_address_to_id(ip)).destroy if fog.addresses.get(fog_ip_address_to_id(ip))
+    end
+
+    def fog_ip_address_to_id(ip)
+      ip_addresses = {}
+      fog.addresses.map {|address| ip_addresses[address.ip] = address.id }
+      ip_addresses[ip]
+    end
+
+
     def create_security_group(group_name)
       unless fog_security_group_name_to_id(group_name)
         fog_security_groups.create(:name => group_name, :description => 'Ciborg-generated group')
@@ -87,9 +98,9 @@ module Ciborg
       servers.each do |server|
         next unless (args == [:all]) || args.include?(server.id)
         next unless confirm_proc.call(server)
-        ip = server.public_ip_address
+        ip = server.addresses["private"].map { |ip_addr| ip_addr["addr"] }.flatten & fog.addresses.map {|address| address.ip }
         server.destroy
-        #release_elastic_ip(ip)
+        release_elastic_ip(ip)
         yield(server) if block_given?
       end
     end
