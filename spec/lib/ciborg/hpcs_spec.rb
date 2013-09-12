@@ -133,7 +133,7 @@ describe Ciborg::Hpcs, :slow do
 
       describe "#Gets the floating ip address" do
         it "can get the real floating ip address" do
-            hpcs.fog_floating_ip(freshly_launched_server).should eq freshly_launched_server.addresses["private"].map { |ip_addr| ip_addr["addr"] }.flatten & fog.addresses.map {|address| address.ip }
+            hpcs.fog_floating_ip(freshly_launched_server).should eq (freshly_launched_server.addresses["private"].map { |ip_addr| ip_addr["addr"] }.flatten & fog.addresses.map {|address| address.ip }).first
         end
       end
 

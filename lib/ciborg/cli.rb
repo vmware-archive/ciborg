@@ -52,7 +52,7 @@ module Ciborg
       server = hpcs.with_key_pair(ciborg_config.server_ssh_pubkey) do |keypair_name|
         hpcs.create_security_group(ciborg_config.security_group)
         hpcs.open_port(ciborg_config.security_group, 22, 443)
-        hpcs.launch_server(keypair_name, ciborg_config.security_group, ciborg_config.instance_size, ciborg_config.availability_zone)
+        hpcs.launch_server(keypair_name, ciborg_config.security_group, ciborg_config.instance_size, ciborg_config.hpcs_zone)
       end
       wait_for_server(server)
 

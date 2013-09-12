@@ -77,8 +77,8 @@ describe Ciborg::ConfigurationWizard do
       wizard.setup
     end
 
-    it "uses the ec2 when ec2 is selected" do
-      wizard.config.stub(:platform).and_return 'ec2'
+    it "uses the aws when aws is selected" do
+      wizard.config.stub(:platform).and_return 'aws'
       wizard.should_receive(:prompt_for_aws)
       wizard.should_not_receive(:prompt_for_hpcs)
       wizard.setup
@@ -140,6 +140,20 @@ describe Ciborg::ConfigurationWizard do
         wizard.stub(:user_wants_to_create_instance?).and_return(true)
       end
 
+      it "creates an aws instance when platform is aws" do
+        wizard.config.stub(:platform).and_return 'aws'
+        wizard.should_receive(:create_instance)
+        wizard.should_not_receive(:create_hpcs_instance)
+        wizard.setup
+      end
+
+      it "creates an hpcs instance when platform is hpcs" do
+        wizard.config.stub(:platform).and_return 'hpcs'
+        wizard.should_not_receive(:create_instance)
+        wizard.should_receive(:create_hpcs_instance)
+        wizard.setup
+      end
+
       it "creates the instance then provisions the server" do
         wizard.should_receive(:create_instance).ordered
         wizard.should_receive(:provision_server).ordered
@@ -191,6 +205,7 @@ describe Ciborg::ConfigurationWizard do
       wizard.config.hpcs_identity.should == "hpcs-identity"
       wizard.config.hpcs_zone.should == "hpcs-zone"
       wizard.config.hpcs_tenant.should == "hpcs-tenant"
+      wizard.config.instance_size.should == "102"
     end
   end
 
@@ -364,10 +379,16 @@ describe Ciborg::ConfigurationWizard do
     end
   end
 
-  describe "#create_instance" do
+  describe "Create instance stuff" do
     it "calls create on CLI" do
       cli.should_receive(:create)
       wizard.create_instance
+    end
+
+    it "calls create_hpcs on CLI" do
+      wizard.config.stub(:instance_size).and_return '102'
+      cli.should_receive(:create_hpcs)
+      wizard.create_hpcs_instance
     end
   end
 

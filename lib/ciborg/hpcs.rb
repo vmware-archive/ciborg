@@ -61,7 +61,7 @@ module Ciborg
     end
 
     def fog_floating_ip(server)
-      server.addresses["private"].map { |ip_addr| ip_addr["addr"] }.flatten & fog.addresses.map {|address| address.ip }
+      (server.addresses["private"].map { |ip_addr| ip_addr["addr"] }.flatten & fog.addresses.map {|address| address.ip }).first
     end
 
     def create_security_group(group_name)

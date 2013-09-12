@@ -333,7 +333,7 @@ describe Ciborg::CLI do
           before { cli.ciborg_config.instance_size = '1000' }
 
           it "launches the instance with the configured instance size" do
-            hpcs.should_receive(:launch_server).with(anything, anything, '1000', 'us-east-1b')
+            hpcs.should_receive(:launch_server).with(anything, anything, '1000', 'az-2.region-a.geo-1')
             cli.create_hpcs
           end
         end
@@ -375,6 +375,97 @@ describe Ciborg::CLI do
             end
             cli.destroy_hpcs
           end
+        end
+      end
+    end
+    context 'with Vagrant', :vagrant do
+      let(:ciborg_config) {
+        Ciborg::Config.new(
+            "node_attributes" => {
+                "jenkins" => {
+                    "builds" => []
+                },
+                "nginx" => {
+                    "basic_auth_user" => "ci",
+                    "basic_auth_password" => "secret"
+                }
+            },
+            "server_ssh_key" => ssh_key_pair_path,
+            "github_ssh_key" => ssh_key_pair_path
+        )
+      }
+
+      describe "#create_vagrant" do
+        it "starts a virtual machine" do
+          cli.create_vagrant
+          wait_for { sobo.system("ls") == 0 }
+        end
+
+        it "updates the config master ip address" do
+          expect { cli.create_vagrant }.to change { ciborg_config.master }.to('192.168.33.10')
+        end
+      end
+
+      describe "#bootstrap", :slow do
+        before { cli.create_vagrant }
+
+        it "installs all necessary packages, installs rvm and sets up the user" do
+          cli.bootstrap
+          sobo.backtick("dpkg --get-selections").should include("libncurses5-dev")
+          sobo.backtick("ls /usr/local/rvm/").should_not be_empty
+          sobo.backtick("groups ubuntu").should include("rvm")
+        end
+      end
+
+      describe "#chef", :slow do
+        let(:name) { "Bob" }
+        let(:repository) { "http://github.com/mkocher/soloist.git" }
+        let(:branch) { "master" }
+        let(:command) { "exit 0" }
+        let(:jenkins) { Ciborg::Jenkins.new(ciborg_config) }
+
+        before do
+          cli.create_vagrant
+          cli.bootstrap
+          cli.add_build(name, repository, branch, command)
+          FileUtils.mkdir_p("/tmp/ciborg_dummy/cookbooks/pork/recipes/")
+          File.write("/tmp/ciborg_dummy/cookbooks/pork/recipes/bacon.rb", "package 'htop'")
+        end
+
+        after do
+          FileUtils.rm_rf("/tmp/ciborg_dummy")
+        end
+
+        it "runs chef" do
+          Dir.chdir('/tmp/ciborg_dummy/') do
+            cli.ciborg_config.recipes = [
+                "pivotal_ci::jenkins",
+                "sysctl",
+                "pivotal_ci::ssl_certificate",
+                "pivotal_ci::nginx",
+                "pivotal_ci::id_rsa",
+                "pivotal_ci::git_config",
+                "pivotal_ci::jenkins_config",
+                "pork::bacon"
+            ]
+            cli.chef
+          end
+
+          sobo.backtick("ls /var/lib/").should include "jenkins"
+          sobo.backtick("grep 'kernel.shmmax=' /etc/sysctl.conf").should_not be_empty
+          sobo.backtick("sudo cat /var/lib/jenkins/.ssh/id_rsa").should == ciborg_config.github_ssh_key
+          sobo.system("dpkg -l htop").should == 0
+
+          options = [
+              "--insecure",
+              "--user #{ciborg_config.basic_auth_user}:#{ciborg_config.basic_auth_password}"
+          ]
+
+          wait_for do
+            `curl #{options.join(' ')} https://#{cli.master_server.ip}/api/json`.include?("Bob")
+          end
+
+          `curl http://#{cli.master_server.ip}:8080/api/json`.should_not include("Bob")
         end
       end
     end
