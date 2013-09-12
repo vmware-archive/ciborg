@@ -15,6 +15,7 @@ module Ciborg
     property :hpcs_zone
     property :hpcs_tenant
 
+    property :platform, :default => 'aws'
     property :instance_size, :default => 'c1.medium'
     property :ssh_port, :default => 22
     property :server_ssh_key, :default => Proc.new { default_ssh_key }

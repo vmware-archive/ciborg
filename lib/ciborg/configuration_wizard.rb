@@ -14,7 +14,12 @@ module Ciborg
       prompt_for_build
       prompt_for_github_key
       prompt_for_ssh_key
-      prompt_for_aws
+      prompt_for_platform
+      if config.platform == 'ec2'
+        prompt_for_aws
+      elsif config.platform == 'hpcs'
+        prompt_for_hpcs
+      end
       prompt_for_security_group
       prompt_for_basic_auth
       config.save
@@ -32,10 +37,23 @@ module Ciborg
         answer.empty? ? default : answer
       end
 
+      def prompt_for_platform
+        config.platform = ask_with_default("What platform would you like to use? (Amazon = 'ec2', HP Cloud = 'hpcs')", config.platform)
+      end
+
       def prompt_for_aws
         say("For your AWS Access Key and Secret, see https://aws-portal.amazon.com/gp/aws/developer/account/index.html?ie=UTF8&action=access-key")
         config.aws_key = ask_with_default("Your AWS key", config.aws_key)
         config.aws_secret = ask_with_default("Your AWS secret key", config.aws_secret)
+      end
+
+      def prompt_for_hpcs
+        say("For your HPCS Connection attributes, see https://account.hpcloud.com/account/api_keys")
+        config.hpcs_key = ask_with_default("Your HPCS key", config.hpcs_key)
+        config.hpcs_secret = ask_with_default("Your HPCS secret key", config.hpcs_secret)
+        config.hpcs_identity = ask_with_default("Your HPCS identity URL", config.hpcs_identity)
+        config.hpcs_zone = ask_with_default("Your HPCS zone", config.hpcs_zone)
+        config.hpcs_tenant = ask_with_default("Your HPCS tenant ID", config.hpcs_tenant)
       end
 
       def prompt_for_security_group

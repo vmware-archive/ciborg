@@ -72,8 +72,22 @@ describe Ciborg::ConfigurationWizard do
       wizard.setup
     end
 
-    it "prompts for aws credentials" do
+    it "asks for a platform" do
+      wizard.should_receive(:prompt_for_platform)
+      wizard.setup
+    end
+
+    it "uses the ec2 when ec2 is selected" do
+      wizard.config.stub(:platform).and_return 'ec2'
       wizard.should_receive(:prompt_for_aws)
+      wizard.should_not_receive(:prompt_for_hpcs)
+      wizard.setup
+    end
+
+    it "uses the hpcs when hpcs is selected" do
+      wizard.config.stub(:platform).and_return 'hpcs'
+      wizard.should_receive(:prompt_for_hpcs)
+      wizard.should_not_receive(:prompt_for_aws)
       wizard.setup
     end
 
@@ -157,6 +171,26 @@ describe Ciborg::ConfigurationWizard do
 
       wizard.config.aws_key.should == "aws-key"
       wizard.config.aws_secret.should == "aws-secret-key"
+    end
+  end
+
+  describe "#prompt_for_hpcs" do
+    before { wizard.stub(:say) }
+
+    it "reads in the key and secret" do
+      wizard.should_receive(:ask).and_return("hpcs-key")
+      wizard.should_receive(:ask).and_return("hpcs-secret-key")
+      wizard.should_receive(:ask).and_return("hpcs-identity")
+      wizard.should_receive(:ask).and_return("hpcs-zone")
+      wizard.should_receive(:ask).and_return("hpcs-tenant")
+
+      wizard.prompt_for_hpcs
+
+      wizard.config.hpcs_key.should == "hpcs-key"
+      wizard.config.hpcs_secret.should == "hpcs-secret-key"
+      wizard.config.hpcs_identity.should == "hpcs-identity"
+      wizard.config.hpcs_zone.should == "hpcs-zone"
+      wizard.config.hpcs_tenant.should == "hpcs-tenant"
     end
   end
 
@@ -279,17 +313,17 @@ describe Ciborg::ConfigurationWizard do
         wizard.stub(:ask_with_default)
 
         wizard.config.node_attributes.jenkins.builds << {
-          "name" => "first-post",
-          "repository" => "what",
-          "command" => "hot-grits",
-          "branch" => "oak"
+            "name" => "first-post",
+            "repository" => "what",
+            "command" => "hot-grits",
+            "branch" => "oak"
         }
 
         wizard.config.node_attributes.jenkins.builds << {
-          "name" => "grails",
-          "repository" => "huh",
-          "command" => "colored-greens",
-          "branch" => "larch"
+            "name" => "grails",
+            "repository" => "huh",
+            "command" => "colored-greens",
+            "branch" => "larch"
         }
       end
 
