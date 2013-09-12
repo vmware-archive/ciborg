@@ -34,6 +34,14 @@ module Ciborg
       fog.key_pairs
     end
 
+    def with_key_pair(pubkey)
+      unique_key_pair_name = "CIBORG-#{Time.now.to_i}"
+      add_key_pair(unique_key_pair_name, pubkey)
+      yield unique_key_pair_name if block_given?
+    ensure
+      delete_key_pair(unique_key_pair_name)
+    end
+
     def fog_servers
       fog.servers
     end
@@ -52,6 +60,9 @@ module Ciborg
       ip_addresses[ip]
     end
 
+    def fog_floating_ip(server)
+      server.addresses["private"].map { |ip_addr| ip_addr["addr"] }.flatten & fog.addresses.map {|address| address.ip }
+    end
 
     def create_security_group(group_name)
       unless fog_security_group_name_to_id(group_name)
