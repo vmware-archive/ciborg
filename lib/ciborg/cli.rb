@@ -187,7 +187,7 @@ module Ciborg
     end
 
     def wait_for_server(server)
-      Godot.new(server.public_ip_address, 22, :timeout => 180).wait!
+      Godot.new(server.public_ip_address, 22, :timeout => 1800).wait!
     end
 
     # The proc is given a Fog server object and must return true/false

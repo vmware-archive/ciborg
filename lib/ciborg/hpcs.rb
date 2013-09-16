@@ -92,7 +92,7 @@ module Ciborg
 
     def launch_server(key_pair_name, security_group_name, instance_type, zone)
       fog_servers.create(
-          :image_id => "68425",
+          :image_id => "67074",
           :flavor_id => instance_type,
           :name => "Ciborg",
           :metadata => { "tags" => "ciborg #{Ciborg::VERSION}" },
