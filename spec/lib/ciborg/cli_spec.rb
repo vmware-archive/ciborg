@@ -333,7 +333,7 @@ describe Ciborg::CLI do
           before { cli.ciborg_config.instance_size = '1000' }
 
           it "launches the instance with the configured instance size" do
-            hpcs.should_receive(:launch_server).with(anything, anything, '1000', 'az-2.region-a.geo-1')
+            hpcs.should_receive(:launch_server).with(anything, anything, '1000', anything)
             cli.create_hpcs
           end
         end
