@@ -27,7 +27,6 @@ Gem::Specification.new do |s|
   s.add_dependency "net-ssh"
   s.add_dependency "httpclient"
   s.add_dependency "godot"
-  s.add_dependency "hpfog", "~> 0.0.20"
 
   s.add_development_dependency "rspec"
   s.add_development_dependency "guard-rspec"
