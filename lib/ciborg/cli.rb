@@ -56,9 +56,9 @@ module Ciborg
       end
       wait_for_server(server)
 
-      say("Writing ip address for hpcs: #{hpcs.fog_floating_ip(server)}")
+      say("Writing ip address for hpcs: #{server.public_ip_address}")
 
-      ciborg_config.update(master: hpcs.fog_floating_ip(server), instance_id: server.id)
+      ciborg_config.update(master: server.public_ip_address, instance_id: server.id)
     end
 
     desc "destroy_hpcs", "Destroys all the ciborg resources on Hpcs"
@@ -68,7 +68,7 @@ module Ciborg
       instance = (options['all'] ? :all : ciborg_config.instance_id)
 
       hpcs.destroy_vm(confirmation_proc(options['force']), instance) do |server|
-        say("Clearing ip address for hpcs: #{hpcs.fog_floating_ip(server)}")
+        say("Clearing ip address for hpcs: #{server.public_ip_address}")
 
         ciborg_config.update(master: nil, instance_id: nil)
       end

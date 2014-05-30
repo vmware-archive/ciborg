@@ -60,10 +60,6 @@ module Ciborg
       ip_addresses[ip]
     end
 
-    def fog_floating_ip(server)
-      (server.addresses["private"].map { |ip_addr| ip_addr["addr"] }.flatten & fog.addresses.map {|address| address.ip }).first
-    end
-
     def create_security_group(group_name)
       unless fog_security_group_name_to_id(group_name)
         fog_security_groups.create(:name => group_name, :description => 'Ciborg-generated group')
@@ -109,7 +105,7 @@ module Ciborg
       servers.each do |server|
         next unless (args == [:all]) || args.include?(server.id)
         next unless confirm_proc.call(server)
-        ip = server.addresses["private"].map { |ip_addr| ip_addr["addr"] }.flatten & fog.addresses.map {|address| address.ip }
+        ip = server.public_ip_address
         server.destroy
         release_elastic_ip(ip)
         yield(server) if block_given?
