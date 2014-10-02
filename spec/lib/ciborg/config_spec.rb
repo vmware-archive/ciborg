@@ -210,7 +210,8 @@ keypair_name: ciborg
     its(:cookbook_paths) { should == ['./chef/cookbooks/', './chef/travis-cookbooks/ci_environment', './chef/project-cookbooks'] }
     its(:instance_size) { should == 'c1.medium' }
     its(:security_group) { should == 'ciborg'}
-    its(:availability_zone) { should == 'us-east-1b' }
+    its(:availability_zone) { should be_nil }
+    its(:aws_region) { should == 'us-east-1' }
 
     context 'when id_rsa exists' do
       before { File.stub(:exists?).and_return(true) }

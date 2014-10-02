@@ -1,7 +1,8 @@
 require "spec_helper"
 
 describe Ciborg::Amazon, :slow do
-  subject(:amazon) { Ciborg::Amazon.new(ENV["EC2_KEY"], ENV["EC2_SECRET"]) }
+  subject(:amazon) { Ciborg::Amazon.new(ENV["EC2_KEY"], ENV["EC2_SECRET"], region) }
+  let(:region) { 'us-east-1' }
   let(:tempdir) { Dir.mktmpdir }
   let(:fog) { amazon.send(:fog) }
 
@@ -163,6 +164,30 @@ describe Ciborg::Amazon, :slow do
       expect do
         amazon.release_elastic_ip(elastic_ip.public_ip)
       end.to change { fog.addresses.reload.count }.by(-1)
+    end
+  end
+
+  describe "aws region" do
+    let(:region) { 'ap-southeast-2' }
+    its(:region) { should == 'ap-southeast-2' }
+
+    it 'Fog should use the region' do
+      fog.region.should == region
+    end
+
+    {'us-east-1' => 'ami-a29943cb', 'us-west-1' => 'ami-87712ac2', 'us-west-2' => 'ami-20800c10',
+      'eu-west-1' => 'ami-e1e8d395', 'ap-southeast-1' => 'ami-a4ca8df6', 'ap-southeast-2' => 'ami-974ddead',
+      'ap-northeast-1' => 'ami-60c77761', 'sa-east-1' => 'ami-8cd80691' }.each do |region, ami|
+
+      context "when in #{region}" do
+        let(:region) { region }
+
+        it "should use the #{ami} image" do
+          fog.stub(:servers).and_return(servers = double('servers'))
+          servers.should_receive(:create).with(hash_including(:image_id => ami)).and_return(server = double(:tap => true))
+          subject.launch_server('test_key', 'test_sg')
+        end
+      end
     end
   end
 end

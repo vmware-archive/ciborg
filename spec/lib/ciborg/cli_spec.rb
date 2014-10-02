@@ -141,7 +141,16 @@ describe Ciborg::CLI do
           before { cli.ciborg_config.instance_size = 'really_big_instance' }
 
           it "launches the instance with the configured instance size" do
-            amazon.should_receive(:launch_server).with(anything, anything, 'really_big_instance', 'us-east-1b')
+            amazon.should_receive(:launch_server).with(anything, anything, 'really_big_instance', anything)
+            cli.create
+          end
+        end
+
+        context "with a custom Availabile Zone", :slow => false do
+          before { cli.ciborg_config.availability_zone = 'test-a1' }
+
+          it "launches the instance in the configured Availability Zone" do
+            amazon.should_receive(:launch_server).with(anything, anything, anything, 'test-a1')
             cli.create
           end
         end
