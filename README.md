@@ -1,3 +1,5 @@
+# DEPRECATED!!!!  Ciborg is no longer under active development.
+
 # Ciborg: Your Chief Administrative Aide on Cloud City
 
 ![Ciborg](http://cheffiles.pivotallabs.com/ciborg/logo.png)
