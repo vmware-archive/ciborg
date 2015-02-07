@@ -14,8 +14,8 @@ end
 
 file "#{ca_path}/index.txt"
 
-execute "save ip to cert_cn_path" do
-  command("ifconfig | egrep 'inet ' | sed -e 's/inet //' -e 's/addr://' -e 's/ Bcast.*//' -e 's/^ *//' -e 's/ *$//' -e 's/^127\\..*//' -e 's/^10\\..*//' -e '/^$/d' > #{cert_cn_path}")
+template cert_cn_path do
+   source "certcn.erb"
 end
 
 execute "create serial" do

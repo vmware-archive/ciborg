@@ -14,13 +14,22 @@ module Ciborg
       prompt_for_build
       prompt_for_github_key
       prompt_for_ssh_key
-      prompt_for_aws
+      prompt_for_platform
+      if config.platform == 'hpcs'
+        prompt_for_hpcs
+      else
+        prompt_for_aws
+      end
       prompt_for_security_group
       prompt_for_basic_auth
       config.save
       say config.reload.display
       if user_wants_to_create_instance?
-        create_instance
+        if (config.platform == 'hpcs')
+          create_hpcs_instance
+        else
+          create_instance
+        end
         provision_server
       end
     end
@@ -32,6 +41,10 @@ module Ciborg
         answer.empty? ? default : answer
       end
 
+      def prompt_for_platform
+        config.platform = ask_with_default("What platform would you like to use? (Amazon = 'aws', HP Cloud = 'hpcs')", config.platform)
+      end
+
       def prompt_for_aws
         say("For your AWS Access Key and Secret, see https://aws-portal.amazon.com/gp/aws/developer/account/index.html?ie=UTF8&action=access-key")
         config.aws_key = ask_with_default("Your AWS key", config.aws_key)
@@ -39,8 +52,18 @@ module Ciborg
         config.aws_region = ask_with_default("Your AWS region", config.aws_region)
       end
 
+      def prompt_for_hpcs
+        say("For your HPCS Connection attributes, see https://account.hpcloud.com/account/api_keys")
+        config.hpcs_key = ask_with_default("Your HPCS key", config.hpcs_key)
+        config.hpcs_secret = ask_with_default("Your HPCS secret key", config.hpcs_secret)
+        config.hpcs_identity = ask_with_default("Your HPCS identity URL", config.hpcs_identity)
+        config.hpcs_zone = ask_with_default("Your HPCS zone", config.hpcs_zone)
+        config.hpcs_tenant = ask_with_default("Your HPCS tenant ID", config.hpcs_tenant)
+        config.instance_size = "102"
+      end
+
       def prompt_for_security_group
-        config.security_group = ask_with_default("What EC2 security group would you like to use?", config.security_group)
+        config.security_group = ask_with_default("What Security Group would you like to use?", config.security_group)
       end
 
       def prompt_for_basic_auth
@@ -75,12 +98,18 @@ module Ciborg
 
       def user_wants_to_create_instance?
         return unless config.master.nil?
-        yes?("Would you like to start an instance on AWS now? (Yes/No)")
+        yes?("Would you like to start a cloud instance now? (Yes/No)")
       end
 
       def create_instance
         say("Creating instance #{config.instance_size}")
         cli.create
+        say("Instance launched.")
+      end
+
+      def create_hpcs_instance
+        say("Creating HPCS instance #{config.instance_size}")
+        cli.create_hpcs
         say("Instance launched.")
       end
 

@@ -2,6 +2,10 @@
 # Override node.default["git_pairs_authors"] and node.default["git_pairs_domain"] in attributes/git_pairs.rb to modify.
 
 pairs:
+  smk: Sean McKinley
+  ri: Ruben Infante
+  rh: Raymond Hardy
+  al: Addison Leake
   dr: Doc Ritezel; doc
   mk: Matthew Kocher; mkocher
   km: Ken Mayer; ken

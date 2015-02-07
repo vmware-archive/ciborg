@@ -11,9 +11,9 @@ describe Ciborg::CLI do
   context 'with Amazon' do
     let(:ciborg_config) {
       Ciborg::Config.new(
-        :aws_key => ENV["EC2_KEY"],
-        :aws_secret => ENV["EC2_SECRET"],
-        :server_ssh_key => ssh_key_pair_path)
+          :aws_key => ENV["EC2_KEY"],
+          :aws_secret => ENV["EC2_SECRET"],
+          :server_ssh_key => ssh_key_pair_path)
     }
 
     describe '#create & #destroy_ec2', :slow, :ec2 do
@@ -222,99 +222,264 @@ describe Ciborg::CLI do
     end
   end
 
-  context 'with Vagrant', :vagrant do
+  context 'with HPCS' do
     let(:ciborg_config) {
       Ciborg::Config.new(
-          "node_attributes" => {
-              "jenkins" => {
-                  "builds" => []
-              },
-              "nginx" => {
-                  "basic_auth_user" => "ci",
-                  "basic_auth_password" => "secret"
-              }
-          },
-          "server_ssh_key" => ssh_key_pair_path,
-          "github_ssh_key" => ssh_key_pair_path
-      )
+          :hpcs_key => ENV["HPCS_KEY"],
+          :hpcs_secret => ENV["HPCS_SECRET"],
+          :hpcs_identity => ENV["HPCS_IDENTITY_ENDPOINT_URL"],
+          :hpcs_tenant => ENV["HPCS_TENANT_ID"],
+          :hpcs_zone => ENV["HPCS_AVAILABILITY_ZONE"],
+          :server_ssh_key => ssh_key_pair_path)
     }
+    describe '#create & #destroy_hpcs', :slow, :hpcs do
+      it "launches an instance and associates elastic ip" do
+        pending "Missing HPCS Credentials" unless SpecHelpers::hpcs_credentials_present?
+        cli.ciborg_config.instance_size = '100'
+        expect { cli.create_hpcs }.to change { ciborg_config.master }.from(nil)
 
-    describe "#create_vagrant" do
-      it "starts a virtual machine" do
-        cli.create_vagrant
-        wait_for { sobo.system("ls") == 0 }
-      end
-
-      it "updates the config master ip address" do
-        expect { cli.create_vagrant }.to change { ciborg_config.master }.to('192.168.33.10')
-      end
-    end
-
-    describe "#bootstrap", :slow do
-      before { cli.create_vagrant }
-
-      it "installs all necessary packages, installs rvm and sets up the user" do
-        cli.bootstrap
-        sobo.backtick("dpkg --get-selections").should include("libncurses5-dev")
-        sobo.backtick("ls /usr/local/rvm/").should_not be_empty
-        sobo.backtick("groups ubuntu").should include("rvm")
+        cli.stub(:options).and_return({'force' => 'force'})
+        expect { cli.destroy_hpcs }.to change { ciborg_config.master }.to(nil)
       end
     end
 
-    describe "#chef", :slow do
-      let(:name) { "Bob" }
+    describe "#ssh" do
+      it "starts an ssh session to the ciborg host" do
+        cli.should_receive(:exec).with("ssh -i #{cli.ciborg_config.server_ssh_key_path} ubuntu@#{cli.ciborg_config.master} -p #{cli.ciborg_config.ssh_port}")
+        cli.ssh
+      end
+    end
+
+    describe "#open", :osx do
+      let(:ciborg_config) do
+        Ciborg::Config.new(:node_attributes => {
+            :nginx => {
+                :basic_auth_user => "ci",
+                :basic_auth_password => "secret"
+            }
+        })
+      end
+
+      it "opens a web browser with the ciborg page" do
+        ciborg_config.master = "127.0.0.1"
+        cli.should_receive(:exec).with("open https://ci:secret@127.0.0.1/")
+        cli.open
+      end
+    end
+
+    describe "#add_build" do
+      let(:name) { "bob" }
       let(:repository) { "http://github.com/mkocher/soloist.git" }
       let(:branch) { "master" }
-      let(:command) { "exit 0" }
-      let(:jenkins) { Ciborg::Jenkins.new(ciborg_config) }
+      let(:command) { "script/ci_build.sh" }
+
+      context "when the config is invalid" do
+        before { ciborg_config.node_attributes.jenkins = {} }
+
+        it "raises an error" do
+          expect do
+            cli.add_build(name, repository, branch, command)
+          end.to raise_error %r{your config file does not have a}
+        end
+      end
+
+      context "when the configuration is valid" do
+        context "with persisted configuration data" do
+          let(:tempfile) do
+            Tempfile.new('ciborg-config').tap do |file|
+              file.write YAML.dump({})
+              file.close
+            end
+          end
+
+          let(:ciborg_config) { Ciborg::Config.from_file(tempfile.path) }
+
+          def builds
+            cli.ciborg_config.reload.node_attributes.jenkins.builds
+          end
+
+          it "persists a build" do
+            cli.add_build(name, repository, branch, command)
+            builds.should_not be_nil
+            builds.should_not be_empty
+          end
+        end
+      end
+    end
+
+    context "with a fake hpcs" do
+      let(:ip_address) { "127.0.0.1" }
+      let(:server) { double("server", :public_ip_address => ip_address).as_null_object }
+      let(:hpcs) { double("HPCS", :launch_server => server).as_null_object }
+      let(:instance_id) { '1' }
 
       before do
-        cli.create_vagrant
-        cli.bootstrap
-        cli.add_build(name, repository, branch, command)
-        FileUtils.mkdir_p("/tmp/ciborg_dummy/cookbooks/pork/recipes/")
-        File.write("/tmp/ciborg_dummy/cookbooks/pork/recipes/bacon.rb", "package 'htop'")
+        cli.stub(:hpcs).and_return(hpcs)
       end
 
-      after do
-        FileUtils.rm_rf("/tmp/ciborg_dummy")
+      describe "#create_hpcs" do
+        before do
+          hpcs.stub(:with_key_pair).and_yield("unique-key-pair-name")
+          cli.should_receive(:wait_for_server)
+        end
+        it "uses the configured key pair" do
+          hpcs.should_receive(:with_key_pair).with(cli.ciborg_config.server_ssh_pubkey)
+          cli.create_hpcs
+        end
+
+        context "with a custom security group", :slow => false do
+          before { cli.ciborg_config.security_group = 'custom_group' }
+
+          it "launches the instance with the configured security group" do
+            hpcs.should_receive(:create_security_group).with('custom_group')
+            hpcs.should_receive(:open_port).with('custom_group', anything, anything)
+            hpcs.should_receive(:launch_server).with(anything, 'custom_group', anything, anything)
+            cli.create_hpcs
+          end
+        end
+
+        context "with a custom instance size", :slow => false do
+          before { cli.ciborg_config.instance_size = '1000' }
+
+          it "launches the instance with the configured instance size" do
+            hpcs.should_receive(:launch_server).with(anything, anything, '1000', anything)
+            cli.create_hpcs
+          end
+        end
       end
 
-      it "runs chef" do
-        Dir.chdir('/tmp/ciborg_dummy/') do
-          cli.ciborg_config.recipes = [
-            "pivotal_ci::jenkins",
-            "sysctl",
-            "pivotal_ci::ssl_certificate",
-            "pivotal_ci::nginx",
-            "pivotal_ci::id_rsa",
-            "pivotal_ci::git_config",
-            "pivotal_ci::jenkins_config",
-            "pork::bacon"
+      describe "destroy_hpcs" do
+        before do
+          cli.ciborg_config.master = ip_address
+          cli.ciborg_config.instance_id = instance_id
+        end
+
+        context 'by default' do
+          before do
+            hpcs.stub(:destroy_vm).and_yield(double("SERVER").as_null_object)
+          end
+
+          it 'deletes the known instance' do
+            hpcs.should_receive(:destroy_vm).and_yield(double("SERVER").as_null_object)
+            cli.destroy_hpcs
+          end
+
+          it 'clears the master ip address' do
+            expect { cli.destroy_hpcs }.to change(cli.ciborg_config, :master).to(nil)
+          end
+
+          it 'clears the master instance id' do
+            expect { cli.destroy_hpcs }.to change(cli.ciborg_config, :instance_id).to(nil)
+          end
+
+          it 'does not delete sibling instances' do
+            hpcs.should_receive(:destroy_vm).with(a_kind_of(Proc), instance_id)
+            cli.destroy_hpcs
+          end
+
+          it 'prompts for confirmation' do
+            cli.should_receive(:yes?).and_return(true)
+            hpcs.should_receive(:destroy_vm).with(a_kind_of(Proc), instance_id) do |confirm_proc, instance_id|
+              confirm_proc.call(double("SERVER").as_null_object)
+            end
+            cli.destroy_hpcs
+          end
+        end
+      end
+    end
+    context 'with Vagrant', :vagrant do
+      let(:ciborg_config) {
+        Ciborg::Config.new(
+            "node_attributes" => {
+                "jenkins" => {
+                    "builds" => []
+                },
+                "nginx" => {
+                    "basic_auth_user" => "ci",
+                    "basic_auth_password" => "secret"
+                }
+            },
+            "server_ssh_key" => ssh_key_pair_path,
+            "github_ssh_key" => ssh_key_pair_path
+        )
+      }
+
+      describe "#create_vagrant" do
+        it "starts a virtual machine" do
+          cli.create_vagrant
+          wait_for { sobo.system("ls") == 0 }
+        end
+
+        it "updates the config master ip address" do
+          expect { cli.create_vagrant }.to change { ciborg_config.master }.to('192.168.33.10')
+        end
+      end
+
+      describe "#bootstrap", :slow do
+        before { cli.create_vagrant }
+
+        it "installs all necessary packages, installs rvm and sets up the user" do
+          cli.bootstrap
+          sobo.backtick("dpkg --get-selections").should include("libncurses5-dev")
+          sobo.backtick("ls /usr/local/rvm/").should_not be_empty
+          sobo.backtick("groups ubuntu").should include("rvm")
+        end
+      end
+
+      describe "#chef", :slow do
+        let(:name) { "Bob" }
+        let(:repository) { "http://github.com/mkocher/soloist.git" }
+        let(:branch) { "master" }
+        let(:command) { "exit 0" }
+        let(:jenkins) { Ciborg::Jenkins.new(ciborg_config) }
+
+        before do
+          cli.create_vagrant
+          cli.bootstrap
+          cli.add_build(name, repository, branch, command)
+          FileUtils.mkdir_p("/tmp/ciborg_dummy/cookbooks/pork/recipes/")
+          File.write("/tmp/ciborg_dummy/cookbooks/pork/recipes/bacon.rb", "package 'htop'")
+        end
+
+        after do
+          FileUtils.rm_rf("/tmp/ciborg_dummy")
+        end
+
+        it "runs chef" do
+          Dir.chdir('/tmp/ciborg_dummy/') do
+            cli.ciborg_config.recipes = [
+                "pivotal_ci::jenkins",
+                "sysctl",
+                "pivotal_ci::ssl_certificate",
+                "pivotal_ci::nginx",
+                "pivotal_ci::id_rsa",
+                "pivotal_ci::git_config",
+                "pivotal_ci::jenkins_config",
+                "pork::bacon"
+            ]
+            cli.chef
+          end
+
+          sobo.backtick("ls /var/lib/").should include "jenkins"
+          sobo.backtick("grep 'kernel.shmmax=' /etc/sysctl.conf").should_not be_empty
+          sobo.backtick("sudo cat /var/lib/jenkins/.ssh/id_rsa").should == ciborg_config.github_ssh_key
+          sobo.system("dpkg -l htop").should == 0
+
+          options = [
+              "--insecure",
+              "--user #{ciborg_config.basic_auth_user}:#{ciborg_config.basic_auth_password}"
           ]
-          cli.chef
+
+          wait_for do
+            `curl #{options.join(' ')} https://#{cli.master_server.ip}/api/json`.include?("Bob")
+          end
+
+          `curl http://#{cli.master_server.ip}:8080/api/json`.should_not include("Bob")
         end
-
-        sobo.backtick("ls /var/lib/").should include "jenkins"
-        sobo.backtick("grep 'kernel.shmmax=' /etc/sysctl.conf").should_not be_empty
-        sobo.backtick("sudo cat /var/lib/jenkins/.ssh/id_rsa").should == ciborg_config.github_ssh_key
-        sobo.system("dpkg -l htop").should == 0
-
-        options = [
-          "--insecure",
-          "--user #{ciborg_config.basic_auth_user}:#{ciborg_config.basic_auth_password}"
-        ]
-
-        wait_for do
-          `curl #{options.join(' ')} https://#{cli.master_server.ip}/api/json`.include?("Bob")
-        end
-
-        `curl http://#{cli.master_server.ip}:8080/api/json`.should_not include("Bob")
       end
     end
   end
-
   def wait_for(&block)
-    Timeout.timeout(180) { sleep 1 until block.call }
+    Timeout.timeout(150) { sleep 1 until block.call }
   end
 end
